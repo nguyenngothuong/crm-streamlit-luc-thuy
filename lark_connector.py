@@ -266,7 +266,7 @@ def create_records(tenant_access_token, app_token, table_id, records, app_id=Non
         return None
 
 
-@st.cache_data(ttl=600) #hsd trong vòng 2h nhé.
+# @st.cache_data(ttl=600) #hsd trong vòng 2h nhé.
 def get_tenant_access_token(app_id, app_secret):
     url = "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal"
     headers = {
@@ -411,13 +411,14 @@ def get_larkbase_data_v4(tenant_access_token, app_token, table_id, view_id=None,
 
 
 
-# lark_app_id = "cli_a6e8ff5828b89009"
+
+
+# lark_app_id = "cli_a6fff92136b8d02f"
 # lark_app_secret = "xxx"
+
+# lark_app_token = "xxx" 
+# lark_table_id = "xxx"
 # tenant_access_token = get_tenant_access_token(lark_app_id, lark_app_secret)
-
-# lark_app_token = "A1Dsb8eKQaJRdKszGGQuwnM9sIg" 
-# lark_table_id = "tblyzCIrjJNJg9AV"
-
 
 
 # payload = {
@@ -446,7 +447,7 @@ def get_larkbase_data_v4(tenant_access_token, app_token, table_id, view_id=None,
 
 
 # # Lưu dữ liệu vào tệp JSON
-# save_data_to_json(data, 'data.json')
+# save_data_to_json(data, 'lark_connector_data.json')
 
 
 

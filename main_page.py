@@ -47,7 +47,7 @@ def main_page():
 
 
         payload = {
-            "field_names": ["Tên môn học","Tên học viên","Số điện thoại","ID khóa học", "ID MÔN HỌC", "Môn học đăng ký", "Trạng thái"],
+            "field_names": ["Tên môn học","Tên học viên","Số điện thoại","ID_KHOA_HOC_TEXT", "ID MÔN HỌC", "Môn học đăng ký", "Trạng thái"],
             "filter": {
                 "conjunction": "and",
                 "conditions": [
@@ -69,28 +69,27 @@ def main_page():
 
         save_data_to_json(records,"records.json")
 
-        # # Đọc dữ liệu học viên từ file JSON test code
-        # with open('data.json', 'r', encoding='utf-8') as f:
-        #     records = json.load(f)
+
 
         # Tiêu đề của ứng dụng
         st.title("Điểm danh học viên")
-
+        
         # Lấy danh sách khóa học
-        khoa_hoc_list = list(set(hv['fields'].get('ID khóa học', {}).get('value', [{}])[0].get('text', '') for hv in records))
-
+        khoa_hoc_list = list(set(hv['fields'].get('ID_KHOA_HOC_TEXT', {}).get('value', [{}])[0].get('text', '') for hv in records))
+        filtered_khoa_hoc_list = list(filter(None, khoa_hoc_list))
+        
         # Hàm để bóc tách số từ khóa học
         def extract_number(khoa_hoc):
             return int(khoa_hoc.split(' ')[0][1:])
 
         # Sắp xếp danh sách khóa học theo số đằng sau "K"
-        khoa_hoc_list = sorted(khoa_hoc_list, key=extract_number, reverse=True)
+        filtered_khoa_hoc_list = sorted(filtered_khoa_hoc_list, key=extract_number, reverse=True)
 
         # Chọn khóa học
-        selected_khoa_hoc = st.selectbox("Chọn khóa học", khoa_hoc_list)
+        selected_khoa_hoc = st.selectbox("Chọn khóa học", filtered_khoa_hoc_list)
 
         # Lấy danh sách môn học theo khóa học đã chọn
-        mon_hoc_list = list(set(hv['fields'].get('Tên môn học', {}).get('value', [{}])[0].get('text', '') for hv in records if hv['fields'].get('ID khóa học', {}).get('value', [{}])[0].get('text', '') == selected_khoa_hoc))
+        mon_hoc_list = list(set(hv['fields'].get('Tên môn học', {}).get('value', [{}])[0].get('text', '') for hv in records if hv['fields'].get('ID_KHOA_HOC_TEXT', {}).get('value', [{}])[0].get('text', '') == selected_khoa_hoc))
         
         # Sắp xếp danh sách môn học theo thứ tự từ Z đến A
         mon_hoc_list = sorted(mon_hoc_list, reverse=False)
@@ -99,7 +98,7 @@ def main_page():
         selected_mon_hoc = st.selectbox("Chọn môn học", filtered_mon_hoc_list)
 
         # Lọc danh sách học viên theo khóa học và môn học đã chọn
-        filtered_hoc_vien = [hv for hv in records if hv['fields'].get('ID khóa học', {}).get('value', [{}])[0].get('text', '') == selected_khoa_hoc and hv['fields'].get('Tên môn học', {}).get('value', [{}])[0].get('text', '') == selected_mon_hoc]
+        filtered_hoc_vien = [hv for hv in records if hv['fields'].get('ID_KHOA_HOC_TEXT', {}).get('value', [{}])[0].get('text', '') == selected_khoa_hoc and hv['fields'].get('Tên môn học', {}).get('value', [{}])[0].get('text', '') == selected_mon_hoc]
 
         st.write("---")
         # Hiển thị thông tin học viên và checkbox để tích chọn trạng thái
@@ -144,7 +143,8 @@ def main_page():
                         "record_id": hv['record_id'],
                         "fields": {
                             "Trạng thái": "Đã học",
-                            "Người điểm danh": st.session_state.user
+                            "Người điểm danh": st.session_state.user,
+                            "Ghi chú điểm danh": txt
                         }
                     })
                 else:
@@ -152,7 +152,9 @@ def main_page():
                         "record_id": hv['record_id'],
                         "fields": {
                             "Trạng thái": "Chưa học",
-                            "Người điểm danh": st.session_state.user
+                            "Người điểm danh": st.session_state.user,
+                            "Ghi chú điểm danh": txt
+                            
                         }
                     })
             
