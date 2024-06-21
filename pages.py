@@ -61,7 +61,7 @@ def help_page():
     st.header("1. Đăng nhập")
     st.write("- Nhập email và mật khẩu của bạn vào các trường tương ứng.")
     st.write("- Nhấn nút 'Đăng nhập' để truy cập vào ứng dụng.")
-    st.write("- Nếu bạn chưa có tài khoản, hãy chọn 'Đăng ký' để tạo tài khoản mới.")
+    st.write("- Nếu bạn chưa có tài khoản, hãy liên hệ admin để tạo tài khoản mới.")
     
     st.header("2. Chọn khóa học và môn học")
     st.write("- Sau khi đăng nhập thành công, bạn sẽ thấy trang chính của ứng dụng.")
