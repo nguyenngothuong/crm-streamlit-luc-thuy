@@ -79,11 +79,32 @@ def help_page():
     st.header("5. Xác nhận và gửi thông tin")
     st.write("- Sau khi hoàn tất việc điểm danh, nhấn nút 'Xác nhận' để gửi thông tin điểm danh đến Larkbase.")
     st.write("- Nếu gửi thành công, bạn sẽ nhận được thông báo 'Điểm danh thành công và đã gửi dữ liệu đến Larkbase!'.")
+    st.write("- Một tin nhắn tổng hợp sẽ được gửi về nhóm chat với nội dung như sau:")
+    st.code("""
+    Người điểm danh: work@nguyenngothuong.com
+    Tên môn học: TRỊ LIỆU CƠ XƯƠNG KHỚP - 2024
+    Học viên đã điểm danh:
+    - 2. Đồng Thu Hiền
+    - 3. Nguyễn Thị Quỳnh Hoa
+    Học viên chưa điểm danh:
+    - 1. Trần Văn Mạnh
+    Ghi chú người điểm danh: test
+    """)
     
     st.header("6. Đăng xuất")
     st.write("- Để đăng xuất khỏi ứng dụng, nhấn vào nút 'Đăng xuất' ở góc trên cùng bên phải.")
     st.write("- Xác nhận đăng xuất bằng cách nhấn nút 'Xác nhận' trong cửa sổ pop-up.")
     
+    st.header("7. Thêm tài khoản cho nhân viên")
+    st.write("Để thêm tài khoản cho nhân viên mới, vui lòng thực hiện theo các bước sau:")
+    st.write("1. Đăng nhập vào tài khoản admin.")
+    st.write("2. Truy cập vào phần quản lý tài khoản.")
+    st.write("3. Chọn 'Thêm tài khoản mới'.")
+    st.write("4. Điền thông tin cần thiết như tên, email, và vai trò của nhân viên.")
+    st.write("5. Xác nhận và lưu thông tin.")
+    st.write("6. Hệ thống sẽ tự động gửi email mời nhân viên mới đặt mật khẩu và kích hoạt tài khoản.")
+    st.write("Để xem hướng dẫn chi tiết, vui lòng xem video sau:")
+    st.video("https://youtu.be/-4w35XeSZq0?si=x14aMqqNprFPVowF&t=560")
     
     st.header("Lưu ý quan trọng")
     st.warning("Để đảm bảo ứng dụng hoạt động ổn định và tránh lỗi, vui lòng không tự ý chỉnh sửa tên cột trong Larkbase. Các tên cột sau đây phải được giữ nguyên:")
