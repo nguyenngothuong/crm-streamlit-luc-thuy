@@ -123,48 +123,56 @@ def main_page():
 
             # Kiểm tra kết quả gửi
             if response.status_code == 200:
-                print("Dữ liệu đã được gửi thành công đến webhook.")
+                st.write("Dữ liệu đã được gửi thành công đến webhook.")
             else:
-                print("Gửi dữ liệu đến webhook thất bại.")
-                print("Mã trạng thái:", response.status_code)
-                print("Nội dung phản hồi:", response.text)
+                st.write("Gửi dữ liệu đến webhook thất bại.")
+                st.write("Mã trạng thái:", response.status_code)
+                st.write("Nội dung phản hồi:", response.text)
                 
         # Nút xác nhận gửi đi
         if st.button("Xác nhận", key="gui_thong_tin_di"):
             diem_danh_data = {
                 "note": txt,
-                "records": []
+                "records": [],
+                "records_full": {
+                    "Người điểm danh": st.session_state.user,
+                    "Tên môn học": selected_mon_hoc,
+                    "Học viên đã điểm danh": [],
+                    "Học viên chưa điểm danh": [],
+                    "Ghi chú người điểm danh": txt
+                }
             }
 
             # Lặp qua danh sách học viên đã lọc
-            for hv in filtered_hoc_vien:
-                if hv.get('trang_thai', False):
-                    diem_danh_data["records"].append({
-                        "record_id": hv['record_id'],
-                        "fields": {
-                            "Trạng thái": "Đã học",
-                            "Người điểm danh": st.session_state.user,
-                            "Ghi chú điểm danh": txt
-                        }
-                    })
+            for i, hv in enumerate(filtered_hoc_vien, start=1):
+                ten_hoc_vien = hv['fields'].get('Tên học viên', {}).get('value', [{}])[0].get('text', '')
+                trang_thai = "Đã học" if hv.get('trang_thai', False) else "Chưa học"
+                
+                # Cập nhật records
+                diem_danh_data["records"].append({
+                    "record_id": hv['record_id'],
+                    "fields": {
+                        "Trạng thái": trang_thai,
+                        "Người điểm danh": st.session_state.user,
+                        "Ghi chú điểm danh": txt
+                    }
+                })
+                
+                # Cập nhật records_full
+                if trang_thai == "Đã học":
+                    diem_danh_data["records_full"]["Học viên đã điểm danh"].append(f"{i}. {ten_hoc_vien}")
                 else:
-                    diem_danh_data["records"].append({
-                        "record_id": hv['record_id'],
-                        "fields": {
-                            "Trạng thái": "Chưa học",
-                            "Người điểm danh": st.session_state.user,
-                            "Ghi chú điểm danh": txt
-                            
-                        }
-                    })
+                    diem_danh_data["records_full"]["Học viên chưa điểm danh"].append(f"{i}. {ten_hoc_vien}")
             
             # Lưu dữ liệu điểm danh vào file JSON
             # save_data_to_json(diem_danh_data, "diem_danh.json")
             # Gửi dữ liệu điểm danh đến webhook
             # st.write(diem_danh_data)
+            
             send_data_to_webhook(diem_danh_data, webhook_url, http_basic_auth_user, http_basic_auth_password)
             # Hiển thị thông báo thành công
             st.success("Điểm danh thành công và đã gửi dữ liệu đến Larkbase!")
+            
         st.write("")
         with st.popover("Đăng xuất"):
             if st.button("Xác nhận", key="xác nhận logout"):
