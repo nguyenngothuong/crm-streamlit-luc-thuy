@@ -100,11 +100,12 @@ def help_page():
     st.write("1. Đăng nhập vào tài khoản admin.")
     st.write("2. Truy cập vào phần quản lý tài khoản.")
     st.write("3. Chọn 'Thêm tài khoản mới'.")
-    st.write("4. Điền thông tin cần thiết như tên, email, và vai trò của nhân viên.")
+    st.write("4. Điền thông tin cần thiết như email, password")
     st.write("5. Xác nhận và lưu thông tin.")
-    st.write("6. Hệ thống sẽ tự động gửi email mời nhân viên mới đặt mật khẩu và kích hoạt tài khoản.")
+    st.markdown("[ADMIN - QUẢN LÝ TÀI KHOẢN](https://supabase.com/dashboard/project)")
+
     st.write("Để xem hướng dẫn chi tiết, vui lòng xem video sau:")
-    st.video("https://youtu.be/-4w35XeSZq0?si=x14aMqqNprFPVowF&t=560")
+    st.video("https://youtu.be/Oq5T-0YP7OM")
     
     st.header("Lưu ý quan trọng")
     st.warning("Để đảm bảo ứng dụng hoạt động ổn định và tránh lỗi, vui lòng không tự ý chỉnh sửa tên cột trong Larkbase. Các tên cột sau đây phải được giữ nguyên:")
