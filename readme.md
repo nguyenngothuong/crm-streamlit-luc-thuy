@@ -1,50 +1,97 @@
-# Ứng dụng Điểm danh học viên
+# Hệ thống Quản lý Đơn hàng dựa trên Streamlit
 
-Ứng dụng Điểm danh học viên là một ứng dụng Streamlit giúp quản lý việc điểm danh và theo dõi trạng thái học tập của học viên. Ứng dụng kết nối với Larkbase để lấy dữ liệu học viên và cập nhật trạng thái điểm danh.
+Dự án này là một ứng dụng web dựa trên Streamlit để quản lý đơn đặt hàng của khách hàng, tích hợp với Lark Suite (Feishu) để lưu trữ và quản lý dữ liệu.
 
-## Cài đặt và Cấu hình
+## Mục lục
 
-1. Clone repository này về máy tính của bạn.
-2. Cài đặt các thư viện cần thiết bằng lệnh `pip install -r requirements.txt`.
-3. Tạo file `secrets.toml` trong thư mục `.streamlit` và cấu hình các biến môi trường sau:
-   - `lark_app_id`: ID của ứng dụng Lark.
-   - `lark_app_secret`: Secret key của ứng dụng Lark.
-   - `lark_app_token`: Token của ứng dụng Lark.
-   - `lark_table_id`: ID của bảng Larkbase chứa dữ liệu học viên.
-   - `http_basic_auth_user`: Tên đăng nhập cho xác thực HTTP Basic.
-   - `http_basic_auth_password`: Mật khẩu cho xác thực HTTP Basic.
-   - `webhook_url`: URL của webhook để gửi dữ liệu điểm danh.
-   - `supabase_url`: URL của dự án Supabase.
-   - `supabase_key_public`: Public key của dự án Supabase.
+1. [Cấu trúc Dự án](#cấu-trúc-dự-án)
+2. [Cài đặt và Thiết lập](#cài-đặt-và-thiết-lập)
+3. [Xác thực](#xác-thực)
+4. [Luồng Ứng dụng Chính](#luồng-ứng-dụng-chính)
+5. [Tích hợp Lark Suite](#tích-hợp-lark-suite)
+6. [Giao diện Người dùng](#giao-diện-người-dùng)
+7. [Xử lý Dữ liệu](#xử-lý-dữ-liệu)
+8. [Tích hợp Webhook](#tích-hợp-webhook)
+9. [Triển khai](#triển-khai)
+10. [Bảo trì và Xử lý Sự cố](#bảo-trì-và-xử-lý-sự-cố)
 
-## Cấu trúc thư mục
+## Cấu trúc Dự án
 
-- `app.py`: File chính để chạy ứng dụng Streamlit.
-- `auth.py`: Chứa các hàm liên quan đến xác thực người dùng (đăng nhập, đăng ký, đăng xuất).
-- `main_page.py`: Chứa nội dung của trang chính, bao gồm chức năng điểm danh học viên.
-- `pages.py`: Chứa các trang phụ như trang đăng nhập, đăng ký và hướng dẫn sử dụng.
-- `requirements.txt`: Chứa danh sách các thư viện cần thiết để chạy ứng dụng.
-- `.streamlit/secrets.toml`: File cấu hình các biến môi trường.
+Dự án bao gồm một số file Python:
 
-## Lưu ý quan trọng
+- `main.py`: Điểm vào của ứng dụng
+- `pages.py`: Chứa các layout trang khác nhau
+- `auth.py`: Xử lý xác thực người dùng
+- `main_page.py`: Giao diện quản lý đơn hàng chính
+- `lark_connector.py`: Quản lý kết nối và truy xuất dữ liệu từ Lark Suite
 
-- Không tự ý chỉnh sửa tên cột trong Larkbase để tránh gây lỗi cho ứng dụng. Các tên cột quan trọng bao gồm:
-  - Tên môn học
-  - Tên học viên
-  - Số điện thoại
-  - ID khóa học
-  - ID MÔN HỌC
-  - Môn học đăng ký
-  - Trạng thái
+## Cài đặt và Thiết lập
 
-## Báo lỗi
+1. Clone repository
+2. Cài đặt các package cần thiết:
+   ```
+   pip install streamlit pandas requests uuid unidecode
+   ```
+3. Thiết lập biến môi trường hoặc Streamlit secrets cho thông tin nhạy cảm (API keys, thông tin đăng nhập)
 
-Nếu bạn gặp bất kỳ lỗi nào trong quá trình sử dụng hoặc phát triển ứng dụng, vui lòng gửi email báo lỗi đến địa chỉ: `report@nguyenngothuong.com`. Trong email, hãy mô tả chi tiết lỗi bạn gặp phải và cung cấp các thông tin liên quan (ví dụ: ảnh chụp màn hình, thông báo lỗi, ...) để chúng tôi có thể khắc phục vấn đề nhanh chóng.
+## Xác thực
 
-## Đóng góp
+Xác thực được xử lý trong `auth.py`:
 
-Nếu bạn muốn đóng góp vào dự án này, vui lòng tạo pull request với các thay đổi của bạn. Chúng tôi rất hoan nghênh và đánh giá cao sự đóng góp của bạn.
+1. Sử dụng Supabase để quản lý người dùng
+2. Hàm `login()` xác thực người dùng
+3. Hàm `logout()` đăng xuất người dùng
+4. Session state được sử dụng để duy trì trạng thái đăng nhập
 
-## Liên hệ
+## Luồng Ứng dụng Chính
 
-Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào, vui lòng liên hệ với chúng tôi qua email: `contact@nguyenngothuong.com`.
+1. `main.py` đóng vai trò là điểm vào
+2. Nó kiểm tra trạng thái đăng nhập và render các trang phù hợp
+3. Sử dụng `streamlit_navigation_bar` để điều hướng giữa các trang
+
+## Tích hợp Lark Suite
+
+`lark_connector.py` quản lý tích hợp Lark Suite:
+
+1. `get_tenant_access_token()`: Lấy access token cho các API call
+2. `get_larkbase_data_v4()`: Lấy dữ liệu từ các bảng Lark Suite
+3. `create_a_record()` và `create_records()`: Thêm bản ghi mới vào bảng Lark Suite
+
+## Giao diện Người dùng
+
+Giao diện quản lý đơn hàng chính nằm trong `main_page.py`:
+
+1. Hiển thị form thông tin khách hàng
+2. Cho phép thêm và chỉnh sửa các mặt hàng trong đơn hàng
+3. Tính toán tổng đơn hàng
+4. Xử lý tải lên file đính kèm cho đơn hàng
+
+## Xử lý Dữ liệu
+
+1. Dữ liệu khách hàng được lấy và xử lý từ Lark Suite
+2. Dữ liệu sản phẩm được truy xuất và sử dụng cho việc chọn mặt hàng trong đơn hàng
+3. Dữ liệu đơn hàng được thu thập và định dạng trước khi gửi đi
+
+## Tích hợp Webhook
+
+Ứng dụng gửi dữ liệu đơn hàng đến một webhook:
+1. Dữ liệu đơn hàng được định dạng thành một payload
+2. Gửi thông qua request POST đến URL webhook đã chỉ định
+3. Phản hồi được xử lý và hiển thị cho người dùng
+
+## Triển khai
+
+Ứng dụng có thể được triển khai bằng Streamlit sharing hoặc bất kỳ nền tảng nào hỗ trợ ứng dụng web Python.
+
+## Bảo trì và Xử lý Sự cố
+
+1. Thường xuyên kiểm tra và cập nhật token API Lark Suite
+2. Theo dõi phản hồi webhook để phát hiện vấn đề tích hợp
+3. Cập nhật các dependency
+4. Kiểm tra log Streamlit để phát hiện lỗi runtime
+
+Đối với bất kỳ vấn đề nào:
+1. Xác minh kết nối Lark Suite
+2. Đảm bảo endpoint webhook có thể truy cập được
+3. Kiểm tra luồng xác thực với Supabase
+4. Xem xét quản lý session state của Streamlit

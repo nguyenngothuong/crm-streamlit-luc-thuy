@@ -1,5 +1,5 @@
 import streamlit as st
-from auth import login, signup, logout
+from auth import login, logout
 from streamlit_navigation_bar import st_navbar
 
 def login_page():
@@ -12,31 +12,7 @@ def login_page():
             st.success("Đăng nhập thành công!")
             st.rerun()
 
-def signup_page():
-    st.title("Đăng ký")
-    email = st.text_input("Email", key="signup_email")
-    password = st.text_input("Mật khẩu", type="password", key="signup_password")
-    confirm_password = st.text_input("Xác nhận mật khẩu", type="password", key="signup_confirm_password")
-    
-    if st.button("Đăng ký"):
-        if password != confirm_password:
-            st.error("Mật khẩu và xác nhận mật khẩu không khớp.")
-        elif len(password) < 8:
-            st.error("Mật khẩu phải có ít nhất 8 ký tự.")
-        elif not any(char.islower() for char in password):
-            st.error("Mật khẩu phải chứa ít nhất một chữ cái thường.")
-        elif not any(char.isupper() for char in password):
-            st.error("Mật khẩu phải chứa ít nhất một chữ cái hoa.")
-        elif not any(char.isdigit() for char in password):
-            st.error("Mật khẩu phải chứa ít nhất một chữ số.")
-        elif not any(char in "!@#$%^&*()_+-=[]{};':\"|\<>?,./" for char in password):
-            st.error("Mật khẩu phải chứa ít nhất một ký tự đặc biệt.")
-        else:
-            try:
-                if signup(email, password):
-                    st.success("Đăng ký thành công!")
-            except Exception as e:
-                st.error(f"Đăng ký thất bại: {e}")
+
 
 
 def main_page():
@@ -52,76 +28,87 @@ def main_page():
             st.success("Đăng xuất thành công!")
             login_page()
             st.rerun()
-            
-            
+def note():
+    st.title("Ghi chú")
+    
+    st.header("1. nội dung cập nhật")
+    st.info("Cập nhật: 10/06/2024.")
+    st.write("1. Thêm form giống như form ở larkbase")
+    st.write("2. Chỉ hiển thị ra danh sách khách hàng đã 'chốt'")
+    st.write("---")
+    st.info("Cập nhật: 16/06/2024.")
+    st.write("1. Fix bug linh tinh")
+    st.write("2. Thêm video hướng dẫn - sắp ra mắt")
+    st.write("3. Thêm tính năng login nhiều user - ghi lại user khi gửi dữ liệu.")
+    st.write("---")
+    st.info("Cập nhật: 19/06/2024.")
+    st.write("1. Fix bug: không thể kết nối đến dữ liệu (lỗi hết hạn token)")
+    st.write("2. Thêm tính năng login nhiều user - ghi lại user khi gửi dữ liệu. (tk mk cần thì gửi thượng để thượng cài)")
+    st.write("---")
+    
+    st.info("Cập nhật: 29/06/2024.")
+    st.write("1. Thêm thanh navibar cho dễ theo dõi tab")
+    st.write("2. Thêm tk mk cho từng user, log lại lịch sử đăng nhập, thao tác của user.")
+    
+    st.write("---")
+    st.header("2. Kế hoạch cập nhật")
+    st.write("Load dữ liệu nhanh hơn...")
+
 def help_page():
     st.title("Hướng dẫn sử dụng")
-    st.write("Chào mừng đến với hướng dẫn sử dụng ứng dụng Streamlit!")
-    
+    st.write("Chào mừng đến với hướng dẫn sử dụng ứng dụng Quản lý Đơn hàng! Dưới đây là các bước chi tiết để sử dụng ứng dụng hiệu quả.")
+
     st.header("1. Đăng nhập")
     st.write("- Nhập email và mật khẩu của bạn vào các trường tương ứng.")
-    st.write("- Nhấn nút 'Đăng nhập' để truy cập vào ứng dụng.")
-    st.write("- Nếu bạn chưa có tài khoản, hãy liên hệ admin để tạo tài khoản mới.")
-    
-    st.header("2. Chọn khóa học và môn học")
-    st.write("- Sau khi đăng nhập thành công, bạn sẽ thấy trang chính của ứng dụng.")
-    st.write("- Chọn khóa học từ danh sách 'Chọn khóa học'.")
-    st.write("- Chọn môn học từ danh sách 'Chọn môn học' tương ứng với khóa học đã chọn.")
-    
-    st.header("3. Điểm danh học viên")
-    st.write("- Sau khi chọn khóa học và môn học, danh sách học viên sẽ được hiển thị.")
-    st.write("- Mỗi học viên sẽ có thông tin như: STT, Tên học viên, Số điện thoại.")
-    st.write("- Đánh dấu vào checkbox 'Điểm danh' để xác nhận sự có mặt của học viên.")
-    
-    st.header("4. Ghi chú")
-    st.write("- Bạn có thể nhập ghi chú vào ô 'Ghi chú' nếu cần thiết.")
-    
-    st.header("5. Xác nhận và gửi thông tin")
-    st.write("- Sau khi hoàn tất việc điểm danh, nhấn nút 'Xác nhận' để gửi thông tin điểm danh đến Larkbase.")
-    st.write("- Nếu gửi thành công, bạn sẽ nhận được thông báo 'Điểm danh thành công và đã gửi dữ liệu đến Larkbase!'.")
-    st.write("- Một tin nhắn tổng hợp sẽ được gửi về nhóm chat với nội dung như sau:")
-    st.code("""
-    Người điểm danh: work@nguyenngothuong.com
-    Tên môn học: TRỊ LIỆU CƠ XƯƠNG KHỚP - 2024
-    Học viên đã điểm danh:
-    - 2. Đồng Thu Hiền
-    - 3. Nguyễn Thị Quỳnh Hoa
-    Học viên chưa điểm danh:
-    - 1. Trần Văn Mạnh
-    Ghi chú người điểm danh: test
-    """)
-    
-    st.header("6. Đăng xuất")
-    st.write("- Để đăng xuất khỏi ứng dụng, nhấn vào nút 'Đăng xuất' ở góc trên cùng bên phải.")
-    st.write("- Xác nhận đăng xuất bằng cách nhấn nút 'Xác nhận' trong cửa sổ pop-up.")
-    
-    st.header("7. Thêm tài khoản cho nhân viên")
-    st.write("Để thêm tài khoản cho nhân viên mới, vui lòng thực hiện theo các bước sau:")
-    st.write("1. Đăng nhập vào tài khoản admin.")
-    st.write("2. Truy cập vào phần quản lý tài khoản.")
-    st.write("3. Chọn 'Thêm tài khoản mới'.")
-    st.write("4. Điền thông tin cần thiết như email, password")
-    st.write("5. Xác nhận và lưu thông tin.")
-    st.markdown("[ADMIN - QUẢN LÝ TÀI KHOẢN](https://supabase.com/dashboard/project)")
+    st.write("- Nhấn nút 'Đăng nhập' để truy cập vào hệ thống.")
+    st.write("- Nếu bạn quên mật khẩu, vui lòng liên hệ với quản trị viên để được hỗ trợ.")
 
-    st.write("Để xem hướng dẫn chi tiết, vui lòng xem video sau:")
-    st.video("https://youtu.be/Oq5T-0YP7OM")
-    
+    st.header("2. Quản lý Thông tin Khách hàng")
+    st.write("- Bạn có thể chọn 'Thêm mới' hoặc 'Chọn từ danh sách' để nhập thông tin khách hàng.")
+    st.write("- Khi thêm mới, điền đầy đủ thông tin như tên, số điện thoại, nguồn khách hàng.")
+    st.write("- Khi chọn từ danh sách, hệ thống sẽ tự động điền thông tin khách hàng đã có.")
+
+    st.header("3. Tạo Đơn hàng")
+    st.write("- Chọn 'Hình thức đơn hàng', 'Hình thức thanh toán', và 'Tình trạng cọc'.")
+    st.write("- Nhấn 'Thêm sản phẩm' để bắt đầu thêm các mặt hàng vào đơn.")
+    st.write("- Với mỗi sản phẩm:")
+    st.write("  + Chọn 'Mã vật tư' từ danh sách.")
+    st.write("  + Nhập số lượng và điều chỉnh đơn giá nếu cần.")
+    st.write("  + Thêm ghi chú cho sản phẩm nếu có.")
+    st.write("- Hệ thống sẽ tự động tính toán tổng tiền cho mỗi sản phẩm và toàn bộ đơn hàng.")
+
+    st.header("4. Thông tin Bổ sung")
+    st.write("- Nhập số tiền cọc, phí vận chuyển, phí công thợ và phụ thu (nếu có).")
+    st.write("- Chọn thời gian yêu cầu thực hiện đơn hàng.")
+    st.write("- Nhập số lượng m2 yêu cầu giữ và các yêu cầu khác từ khách hàng.")
+    st.write("- Tải lên sơ đồ nhà khách và hình ảnh mặt bằng (nếu có).")
+    st.write("- Điền địa chỉ đơn hàng và ghi chú bổ sung.")
+
+    st.header("5. Lưu Đơn hàng")
+    st.write("- Kiểm tra lại tất cả thông tin đã nhập.")
+    st.write("- Nhấn nút 'Lưu đơn hàng' để hoàn tất.")
+    st.write("- Hệ thống sẽ xác nhận việc lưu đơn hàng thành công và cung cấp link để xem chi tiết.")
+
+    st.header("6. Xem và Quản lý Đơn hàng")
+    st.write("- Sau khi lưu, bạn có thể xem lại đơn hàng trong phần quản lý đơn hàng.")
+    st.write("- Tại đây, bạn có thể theo dõi trạng thái, chỉnh sửa hoặc hủy đơn hàng nếu cần.")
+
+    st.header("7. Đăng xuất")
+    st.write("- Để đăng xuất, nhấn vào nút 'Đăng xuất' ở góc trên cùng bên phải.")
+    st.write("- Xác nhận đăng xuất bằng cách nhấn nút 'Xác nhận' trong cửa sổ pop-up.")
+
     st.header("Lưu ý quan trọng")
-    st.warning("Để đảm bảo ứng dụng hoạt động ổn định và tránh lỗi, vui lòng không tự ý chỉnh sửa tên cột trong Larkbase. Các tên cột sau đây phải được giữ nguyên:")
-    st.code("""
-        - Tên môn học
-        - Tên học viên
-        - Số điện thoại
-        - ID khóa học
-        - ID MÔN HỌC
-        - Môn học đăng ký
-        - Trạng thái
-    """)
-    
-    st.header("Báo lỗi")
-    st.write("Nếu bạn gặp bất kỳ lỗi nào trong quá trình sử dụng ứng dụng, vui lòng gửi email báo lỗi đến địa chỉ:")
+    st.warning("Để đảm bảo ứng dụng hoạt động ổn định và tránh lỗi, vui lòng không tự ý chỉnh sửa tên cột trong Larkbase. Các tên cột cần được giữ nguyên theo cấu trúc hiện tại.")
+
+    st.header("Báo lỗi và Hỗ trợ")
+    st.write("Nếu bạn gặp bất kỳ lỗi nào trong quá trình sử dụng ứng dụng, vui lòng thực hiện các bước sau:")
+    st.write("1. Chụp ảnh màn hình lỗi (nếu có).")
+    st.write("2. Ghi lại các bước đã thực hiện dẫn đến lỗi.")
+    st.write("3. Gửi email báo lỗi đến địa chỉ:")
     st.code("report@nguyenngothuong.com")
-    st.write("Trong email, hãy mô tả chi tiết lỗi bạn gặp phải và cung cấp các thông tin liên quan (ví dụ: ảnh chụp màn hình, thông báo lỗi, ...) để chúng tôi có thể khắc phục vấn đề nhanh chóng.")
+    st.write("4. Trong email, hãy mô tả chi tiết lỗi bạn gặp phải và đính kèm ảnh chụp màn hình.")
     
-    st.video("https://youtu.be/YG_utHEWOdg")
+    st.write("Đội ngũ hỗ trợ kỹ thuật sẽ phản hồi trong thời gian sớm nhất để giúp bạn giải quyết vấn đề.")
+
+    st.header("Video hướng dẫn")
+    st.write("Để hiểu rõ hơn về cách sử dụng ứng dụng, vui lòng xem video hướng dẫn sau:")
