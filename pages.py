@@ -53,6 +53,7 @@ def note():
     st.write("---")
     st.header("2. Kế hoạch cập nhật")
     st.write("Load dữ liệu nhanh hơn...")
+    st.write("doing - fix lỗi ấn dấu + - tăng giảm số tiền.")
 
 def help_page():
     st.title("Hướng dẫn sử dụng")
