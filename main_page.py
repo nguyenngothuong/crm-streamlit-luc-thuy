@@ -16,7 +16,7 @@ from pages import login_page, help_page, note
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
-    st.session_state.username = ''
+    st.session_state.user = None
     
 def main_page():   
     if 'logged_in' not in st.session_state:
@@ -343,7 +343,6 @@ def main_page():
             so_luong_m2_yeu_cau_giu = st.text_input("Số m2 yêu cầu giữ & Yêu cầu khác từ khách", placeholder="Nhập dạng số vd: 26")
         
         uploaded_files = st.file_uploader("Upload SƠ ĐỒ NHÀ KHÁCH & hình ảnh mặt bằng (nếu đơn hoàn thiện)", accept_multiple_files=True)
-
         dia_chi_don_hang = st.text_input("Địa chỉ đơn hàng")
         ghi_chu_don_hang = st.text_area("Ghi chú", placeholder="Yêu cầu thêm của khách hàng, ghi chú,.... nhập vào đây!")
 
@@ -407,7 +406,7 @@ def main_page():
                     'hinh_thuc_thanh_toan': hinh_thuc_thanh_toan,
                     'tinh_trang_chot': tinh_trang_chot,
                     'attachments': uploaded_files_data,
-                    'user_login': st.session_state.username,
+                    'user_login': st.session_state.user,
                 },
                 'order_items': order_items,
                 'flow_key': str(uuid.uuid4())  # Tạo flow_key duy nhất
