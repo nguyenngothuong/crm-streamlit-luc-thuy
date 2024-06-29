@@ -112,3 +112,4 @@ def help_page():
 
     st.header("Video hướng dẫn")
     st.write("Để hiểu rõ hơn về cách sử dụng ứng dụng, vui lòng xem video hướng dẫn sau:")
+    st.video("https://youtu.be/xXZqcCmn17M?si=xsONGd9kyyGAwQcT")
