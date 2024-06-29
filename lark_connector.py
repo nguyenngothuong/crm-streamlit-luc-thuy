@@ -243,7 +243,7 @@ def create_records(tenant_access_token, app_token, table_id, records, app_id=Non
         return None
 
 
-# @st.cache_data(ttl=600) #hsd trong vòng 2h nhé.
+
 def get_tenant_access_token(app_id, app_secret):
     url = "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal"
     headers = {
@@ -268,7 +268,7 @@ def get_tenant_access_token(app_id, app_secret):
             hours, remainder = divmod(remaining_time.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
 
-            #hiển thị cho user thấy            
+            # hiển thị cho user thấy            
             # st.info(f"Đã lấy mã tenant_access_token mới: {tenant_access_token}")
             # st.info(f"Hạn dùng: {hours} hours, {minutes} minutes")
 
@@ -324,7 +324,7 @@ def flatten_dict(data):
     return result
 
 
-
+@st.cache_data(ttl=3600)
 def get_larkbase_data_v4(tenant_access_token, app_token, table_id, view_id=None, payload=None, app_id=None, app_secret=None):
     url = f"https://open.larksuite.com/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records"
     
@@ -371,10 +371,15 @@ def get_larkbase_data_v4(tenant_access_token, app_token, table_id, view_id=None,
                 else:
                     return None
             elif response.status_code == 403:
+                st.error(response)
                 return None
             else:
+                st.error(response)
                 return None
         except requests.exceptions.RequestException as e:
+            st.error(f"Lỗi: {e}")
+            st.error(response)
+            
             return None
 
     return items

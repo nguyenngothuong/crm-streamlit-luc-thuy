@@ -23,7 +23,7 @@ if not st.session_state.logged_in:
     elif page == "Ghi chú":
         note()
 else:
-    pages = ["Trang chính", "Hướng dẫn sử dụng"]
+    pages = ["Trang chính", "Hướng dẫn sử dụng", "Ghi chú"]
     page = st_navbar(pages)
     if page == "Trang chính":
         main_page() 

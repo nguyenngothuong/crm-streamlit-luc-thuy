@@ -33,6 +33,7 @@ def main_page():
             if login(email, password):
                 st.success("Đăng nhập thành công!")
                 # st.rerun()
+                
             else:
                 st.error("Sai tài khoản hoặc mật khẩu")
     else:
@@ -48,20 +49,14 @@ def main_page():
         table_order_id = st.secrets["streamlit"]["table_order_id"]
         table_orders_id = st.secrets["streamlit"]["table_orders_id"]
         table_product_id = st.secrets["streamlit"]["table_product_id"]
-        st.session_state.tenant_access_token = get_tenant_access_token(lark_app_id, lark_app_secret)
         
-        
-        # Tiêu đề app
+        #tạo tenant để cấp quyền kết nối app
         if 'tenant_access_token' not in st.session_state:
+            # st.write(f"chưa có st.session_state.tenant_access_token, đang lấy mới...")
             st.session_state.tenant_access_token = None
-        if st.session_state.tenant_access_token is None:
             st.session_state.tenant_access_token = get_tenant_access_token(lark_app_id, lark_app_secret)
-            tenant_access_token = st.session_state.tenant_access_token
-            if tenant_access_token is not None:
-                st.write("Đang kết nối đến dữ liệu trong file Larkbase...")
-            else:
-                st.error("Không thể tạo tenant_access_token. Vui lòng kiểm tra lại App ID và App Secret.")
-
+        # st.write(f"st.session_state.tenant_access_token: {st.session_state.tenant_access_token}")
+        
         def get_larkbase_table_data(table_id, payload=None):
             return get_larkbase_data_v4(st.session_state.tenant_access_token, lark_app_token, table_id, payload=payload,  app_id=lark_app_id, app_secret=lark_app_secret)
 
@@ -75,7 +70,6 @@ def main_page():
             dfs = {}
             
             for table_id, table_name in zip(table_ids, table_names):
-                st.info("Đang lấy dữ liệu từ: "+table_name)
                 if table_name == "table_customer":
                     #chỉ lấy ra khách hàng nào đã chốt thôi
                     payload = {
@@ -93,8 +87,11 @@ def main_page():
                         }
                     }
                     
+                    st.info("Đang lấy dữ liệu từ: " + table_name)
                     data = get_larkbase_table_data(table_id, payload)
+                    
                 else:
+                    st.info("Đang lấy dữ liệu từ: " + table_name)
                     data = get_larkbase_table_data(table_id)
                     
                 if data is not None:
@@ -130,7 +127,7 @@ def main_page():
         # st.write(customer_list)
         
         # Modify the customer_list creation
-        customer_list = []
+        st.session_state.customer_list = []
         for customer in sorted_customer_data:
             customer_id = customer['fields'].get('ID khách hàng', {'value': [{'text': ''}]})['value'][0]['text']
             parts = customer_id.split('-')
@@ -141,10 +138,10 @@ def main_page():
                     masked_phone = f"{phone[:3]}{'*' * (len(phone) - 6)}{phone[-3:]}"
                 else:
                     masked_phone = '*' * len(phone)
-                customer_list.append(f"{name} - {masked_phone}")
+                st.session_state.customer_list.append(f"{name} - {masked_phone}")
             else:
-                customer_list.append(customer_id)
-                
+                st.session_state.customer_list.append(customer_id)
+        
                 
         
         # Form nhập thông tin khách hàng
@@ -166,7 +163,7 @@ def main_page():
         else:
             # Chọn khách hàng từ danh sách
             st.info("Dưới đây là danh sách khách hàng đã chốt!")
-            selected_customer = st.selectbox("Chọn khách hàng", customer_list)
+            selected_customer = st.selectbox("Chọn khách hàng", st.session_state.customer_list)
             is_new = "no"
             
             # Lấy thông tin khách hàng đã chọn
