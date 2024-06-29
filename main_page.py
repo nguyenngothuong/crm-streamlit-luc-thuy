@@ -151,10 +151,17 @@ def main_page():
         customer_option = st.radio("Lựa chọn khách hàng", ("Thêm mới", "Chọn từ danh sách"))
 
         if customer_option == "Thêm mới":
-            # Nhập thông tin khách hàng mới
-            customer_name = st.text_input("Tên khách hàng", placeholder= "Nhập tên khách hàng...")
-            customer_phone = st.text_input("Số điện thoại", placeholder="Chỉ nhập dạng số ví dụ 0816226086")
-            customer_ad_channel = st.selectbox("Nguồn khách hàng", customer_source_list, index=customer_source_list.index("FB Mới"))
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                customer_name = st.text_input("Tên khách hàng", placeholder="Nhập tên khách hàng...")
+            
+            with col2:
+                customer_phone = st.text_input("Số điện thoại", placeholder="Chỉ nhập dạng số ví dụ 0816226086")
+            
+            with col3:
+                customer_ad_channel = st.selectbox("Nguồn khách hàng", customer_source_list, index=customer_source_list.index("FB Mới"))
+            
             customer_notes = st.text_area("Ghi chú", placeholder="Nhập ghi chú nếu có (ghi chú về khách hàng)")
             is_new = "yes"
             customer_record_id = ""
