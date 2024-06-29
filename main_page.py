@@ -50,13 +50,6 @@ def main_page():
         table_orders_id = st.secrets["streamlit"]["table_orders_id"]
         table_product_id = st.secrets["streamlit"]["table_product_id"]
         
-        #tạo tenant để cấp quyền kết nối app
-        if 'tenant_access_token' not in st.session_state:
-            # st.write(f"chưa có st.session_state.tenant_access_token, đang lấy mới...")
-            st.session_state.tenant_access_token = None
-            st.session_state.tenant_access_token = get_tenant_access_token(lark_app_id, lark_app_secret)
-        # st.write(f"st.session_state.tenant_access_token: {st.session_state.tenant_access_token}")
-        
         def get_larkbase_table_data(table_id, payload=None):
             return get_larkbase_data_v4(lark_app_token, table_id, payload=payload,  app_id=lark_app_id, app_secret=lark_app_secret)
 
@@ -64,49 +57,48 @@ def main_page():
             with open(file_name, "w", encoding="utf-8") as file:
                 json.dump(df.to_dict(orient="records"), file, ensure_ascii=False, indent=4)
                 
-        if st.session_state.tenant_access_token is not None:
-            table_ids = [table_customer_id, table_product_id]
-            table_names = ["table_customer", "table_product"]
-            dfs = {}
-            
-            for table_id, table_name in zip(table_ids, table_names):
-                if table_name == "table_customer":
-                    #chỉ lấy ra khách hàng nào đã chốt thôi
-                    payload = {
-                        "filter": {
-                            "conditions": [
-                                {
-                                    "field_name": "Tình trạng",
-                                    "operator": "is",
-                                    "value": [
-                                        "Chốt"
-                                    ]
-                                }
-                            ],
-                            "conjunction": "and"
-                        }
+        table_ids = [table_customer_id, table_product_id]
+        table_names = ["table_customer", "table_product"]
+        dfs = {}
+        
+        for table_id, table_name in zip(table_ids, table_names):
+            if table_name == "table_customer":
+                #chỉ lấy ra khách hàng nào đã chốt thôi
+                payload = {
+                    "filter": {
+                        "conditions": [
+                            {
+                                "field_name": "Tình trạng",
+                                "operator": "is",
+                                "value": [
+                                    "Chốt"
+                                ]
+                            }
+                        ],
+                        "conjunction": "and"
                     }
-                    
-                    st.info("Đang lấy dữ liệu từ: " + table_name)
-                    data = get_larkbase_table_data(table_id, payload)
-                    
-                else:
-                    st.info("Đang lấy dữ liệu từ: " + table_name)
-                    data = get_larkbase_table_data(table_id)
-                    
-                if data is not None:
-                    dfs[table_name] = pd.DataFrame(data)
-                    # save_df_to_json(dfs[table_name], f"{table_name}.json")  # Lưu DataFrame vào file JSON
-
-                else:
-                    st.error(f"Kết nối đến bảng {table_name} thất bại!")
-                    st.info(f"Vui lòng F5 lại trang và thử lại!")
-                    return
-            if len(dfs) == len(table_names):
-                st.success("Kết nối và lấy dữ liệu từ Larkbase thành công!")
+                }
+                
+                st.info("Đang lấy dữ liệu từ: " + table_name)
+                data = get_larkbase_table_data(table_id, payload)
+                
             else:
-                st.error("Kết nối và lấy dữ liệu từ Larkbase thất bại!")
+                st.info("Đang lấy dữ liệu từ: " + table_name)
+                data = get_larkbase_table_data(table_id)
+                
+            if data is not None:
+                dfs[table_name] = pd.DataFrame(data)
+                # save_df_to_json(dfs[table_name], f"{table_name}.json")  # Lưu DataFrame vào file JSON
+            else:
+                st.error(f"Kết nối đến bảng {table_name} thất bại!")
+                st.info(f"Vui lòng F5 lại trang và thử lại!")
                 return
+        if len(dfs) == len(table_names):
+            st.success("Kết nối và lấy dữ liệu từ Larkbase thành công!")
+        else:
+            st.error("Kết nối và lấy dữ liệu từ Larkbase thất bại!")
+            st.info(f"Vui lòng F5 lại trang và thử lại!")
+            return
 
 
         # Đọc dữ liệu khách hàng từ DataFrame
@@ -325,12 +317,12 @@ def main_page():
         col1, col2 = st.columns(2)
 
         with col1:
-            tien_coc = st.number_input("Tiền cọc", min_value=0, value=0, step=100000, format="%d")
-            phi_van_chuyen = st.number_input("Phí vận chuyển", min_value=0, value=0, step=10000, format="%d")
+            st.session_state.tien_coc = st.number_input("Tiền cọc", min_value=0, value=0, step=100000, format="%d")
+            st.session_state.phi_van_chuyen = st.number_input("Phí vận chuyển", min_value=0, value=0, step=10000, format="%d")
 
         with col2:
-            phi_cong_tho = st.number_input("Phí công thợ", min_value=0, value=0, step=100000, format="%d")
-            phu_thu = st.number_input("Phụ thu", min_value=0, value=0, step=100000, format="%d")
+            st.session_state.phi_cong_tho = st.number_input("Phí công thợ", min_value=0, value=0, step=100000, format="%d")
+            st.session_state.phu_thu = st.number_input("Phụ thu", min_value=0, value=0, step=100000, format="%d")
         
         col3, col4 = st.columns(2)
         
@@ -403,10 +395,10 @@ def main_page():
                     'ID khách hàng': str(customer_name) + " - " + str(customer_phone),
                     'Nguồn khách hàng': customer_ad_channel,
                     'Ghi chú': unidecode.unidecode(ghi_chu_don_hang),
-                    'Tiền cọc': tien_coc,
-                    'Phụ thu': phu_thu,
-                    'Phí vận chuyển': phi_van_chuyen,
-                    'Phí công thợ': phi_cong_tho,
+                    'Tiền cọc': st.session_state.tien_coc,
+                    'Phụ thu': st.session_state.phu_thu,
+                    'Phí vận chuyển': st.session_state.phi_van_chuyen,
+                    'Phí công thợ': st.session_state.phi_cong_tho,
                     'Hình thức đơn hàng': hinh_thuc_don_hang,
                     'Địa chỉ': dia_chi_don_hang,
                     'so_luong_m2_yeu_cau_giu': so_luong_m2_yeu_cau_giu,

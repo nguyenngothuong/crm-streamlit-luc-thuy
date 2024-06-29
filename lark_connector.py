@@ -258,6 +258,8 @@ def get_tenant_access_token(app_id, app_secret):
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()
         result = response.json()
+        # st.write("response:")
+        # st.write(result)
         
         if result["code"] == 0:
             tenant_access_token = result["tenant_access_token"]
@@ -390,15 +392,15 @@ def get_larkbase_data_v4_old(app_token, table_id, view_id=None, payload=None, ap
 
 @st.cache_data(ttl=3600)
 def get_larkbase_data_v4(app_token, table_id, view_id=None, payload=None, app_id=None, app_secret=None):
-    tenant_access_token = get_tenant_access_token(app_id, app_secret)
+    st.session_state.tenant_access_token = get_tenant_access_token(app_id, app_secret)
     url = f"https://open.larksuite.com/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records"
     
-    params = {"page_size": 500}  # Lấy tối đa 500 bản ghi trong một lần gọi API
+    params = {"page_size": 499}  # Lấy tối đa 500 bản ghi trong một lần gọi API
     if view_id:
         params["view_id"] = view_id
         
     headers = {
-        "Authorization": f"Bearer {tenant_access_token}",
+        "Authorization": f"Bearer {st.session_state.tenant_access_token}",
         "Content-Type": "application/json"
     }
 
