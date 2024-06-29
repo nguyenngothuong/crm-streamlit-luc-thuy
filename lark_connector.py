@@ -325,7 +325,8 @@ def flatten_dict(data):
 
 
 @st.cache_data(ttl=3600)
-def get_larkbase_data_v4(tenant_access_token, app_token, table_id, view_id=None, payload=None, app_id=None, app_secret=None):
+def get_larkbase_data_v4(app_token, table_id, view_id=None, payload=None, app_id=None, app_secret=None):
+    tenant_access_token = get_tenant_access_token(app_id, app_secret)
     url = f"https://open.larksuite.com/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records"
     
     params = {"page_size": 500}  # Lấy tối đa 500 bản ghi trong một lần gọi API

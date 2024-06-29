@@ -58,7 +58,7 @@ def main_page():
         # st.write(f"st.session_state.tenant_access_token: {st.session_state.tenant_access_token}")
         
         def get_larkbase_table_data(table_id, payload=None):
-            return get_larkbase_data_v4(st.session_state.tenant_access_token, lark_app_token, table_id, payload=payload,  app_id=lark_app_id, app_secret=lark_app_secret)
+            return get_larkbase_data_v4(lark_app_token, table_id, payload=payload,  app_id=lark_app_id, app_secret=lark_app_secret)
 
         def save_df_to_json(df, file_name):
             with open(file_name, "w", encoding="utf-8") as file:
