@@ -528,10 +528,14 @@ def get_larkbase_data_v4(app_token, table_id, view_id=None, payload=None, app_id
                 st.error(f"Unexpected response structure: {response_data}")
                 break
 
+
+        
         except requests.exceptions.HTTPError as e:
             error_msg = f"HTTP Error: {e.response.status_code}"
             try:
                 response_data = e.response.json()
+                st.write("Error Response Data:")
+                st.json(response_data)
                 if "code" in response_data and "msg" in response_data:
                     error_msg += f" - {response_data['code']}: {response_data['msg']}"
                 if "error" in response_data and "log_id" in response_data["error"]:
@@ -540,6 +544,7 @@ def get_larkbase_data_v4(app_token, table_id, view_id=None, payload=None, app_id
                 error_msg += f" - Response: {e.response.text}"
             st.error(error_msg)
             break
+        
         except requests.exceptions.RequestException as e:
             st.error(f"Error calling API: {e}")
             break
