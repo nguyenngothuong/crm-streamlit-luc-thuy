@@ -6,6 +6,7 @@ import streamlit as st
 from datetime import timedelta
 import json
 import time
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 
 
@@ -462,10 +463,94 @@ def get_larkbase_data_v4_0207(app_token, table_id, view_id=None, payload=None, a
     progress_bar.progress(1.0)
 
     return items
-str
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    retry=retry_if_exception_type((requests.exceptions.RequestException, json.JSONDecodeError)),
+    reraise=True
+)
+def make_api_request(url, method="GET", headers=None, params=None, json=None):
+    response = requests.request(method, url, headers=headers, params=params, json=json)
+    response.raise_for_status()
+    return response.json()
 
 @st.cache_data(ttl=3600)
 def get_larkbase_data_v4(app_token, table_id, view_id=None, payload=None, app_id=None, app_secret=None):
+    tenant_access_token = get_tenant_access_token(app_id, app_secret)
+    url = f"https://open.larksuite.com/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records"
+    
+    params = {"page_size": 500}
+    if view_id:
+        params["view_id"] = view_id
+        
+    headers = {
+        "Authorization": f"Bearer {tenant_access_token}",
+        "Content-Type": "application/json"
+    }
+
+    items = []
+    page_token = None
+    total_items = 0
+    start_time = time.time()
+
+    # Tạo các phần tử Streamlit để hiển thị tiến độ
+    progress_text = st.empty()
+    progress_bar = st.progress(0)
+    metrics_cols = st.columns(3)
+    total_items_metric = metrics_cols[0].empty()
+    elapsed_time_metric = metrics_cols[1].empty()
+    items_per_second_metric = metrics_cols[2].empty()
+
+    while True:
+        if page_token:
+            params["page_token"] = page_token
+        
+        try:
+            if payload:
+                response_data = make_api_request(url + "/search", method="POST", headers=headers, params=params, json=payload)
+            else:
+                response_data = make_api_request(url, method="GET", headers=headers, params=params)
+
+            if "data" in response_data and "items" in response_data["data"]:
+                new_items = response_data["data"]["items"]
+                items.extend(new_items)
+                total_items += len(new_items)
+
+                # Cập nhật tiến độ
+                elapsed_time = time.time() - start_time
+                items_per_second = total_items / elapsed_time if elapsed_time > 0 else 0
+
+                progress_text.text(f"Đang tải dữ liệu... ({total_items} bản ghi)")
+                progress_bar.progress(total_items % 100 / 100)  # Thanh tiến độ chu kỳ
+                total_items_metric.metric("Tổng số bản ghi", f"{total_items}")
+                elapsed_time_metric.metric("Thời gian (giây)", f"{elapsed_time:.2f}")
+                items_per_second_metric.metric("Bản ghi/giây", f"{items_per_second:.2f}")
+
+                if response_data["data"].get("has_more"):
+                    page_token = response_data["data"].get("page_token")
+                else:
+                    break
+            else:
+                st.error(f"Unexpected response structure: {response_data}")
+                break
+
+        except requests.exceptions.RequestException as e:
+            st.error(f"Error calling API after retries: {e}")
+            break
+        except json.JSONDecodeError:
+            st.error(f"Invalid JSON response after retries")
+            break
+
+    # Hoàn thành
+    progress_text.text(f"Hoàn thành! Đã tải {total_items} bản ghi")
+    progress_bar.progress(1.0)
+
+    return items
+
+@st.cache_data(ttl=3600)
+def get_larkbase_data_v4_lastupdate23h02072024(app_token, table_id, view_id=None, payload=None, app_id=None, app_secret=None):
     tenant_access_token = get_tenant_access_token(app_id, app_secret)
     url = f"https://open.larksuite.com/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records"
     
