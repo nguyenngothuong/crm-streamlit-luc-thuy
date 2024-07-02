@@ -462,7 +462,9 @@ def get_larkbase_data_v4_0207(app_token, table_id, view_id=None, payload=None, a
     progress_bar.progress(1.0)
 
     return items
+str
 
+@st.cache_data(ttl=3600)
 def get_larkbase_data_v4(app_token, table_id, view_id=None, payload=None, app_id=None, app_secret=None):
     tenant_access_token = get_tenant_access_token(app_id, app_secret)
     url = f"https://open.larksuite.com/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records"
