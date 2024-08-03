@@ -31,7 +31,7 @@ def main_page():
 def note():
     st.title("Ghi chú")
     
-    st.header("1. nội dung cập nhật")
+    st.header("1. Nội dung cập nhật")
     st.info("Cập nhật: 10/06/2024.")
     st.write("1. Thêm form giống như form ở larkbase")
     st.write("2. Chỉ hiển thị ra danh sách khách hàng đã 'chốt'")
@@ -49,6 +49,12 @@ def note():
     st.info("Cập nhật: 29/06/2024.")
     st.write("1. Thêm thanh navibar cho dễ theo dõi tab")
     st.write("2. Thêm tk mk cho từng user, log lại lịch sử đăng nhập, thao tác của user.")
+    st.write("---")
+    
+    st.info("Cập nhật: 04/08/2024.")
+    st.write("1. Làm sạch dữ liệu đầu vào - khi thêm thông tin khách hàng mới")
+    st.write("2. Thêm check trùng sdt trước khi nhập vào -> chỉ thông báo")
+    st.write("3. Tối ưu hệ thống!")
     
     st.write("---")
     st.header("2. Kế hoạch cập nhật")

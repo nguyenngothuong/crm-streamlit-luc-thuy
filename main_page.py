@@ -12,12 +12,30 @@ import base64
 import os
 from auth import login,  logout, check_logged_in 
 from pages import login_page, help_page, note
+import re
 
+def format_name(name):
+    # Xóa dấu cách thừa và viết hoa chữ cái đầu của mỗi từ
+    formatted_name = ' '.join(word.capitalize() for word in name.split())
+    return formatted_name
+
+def format_phone(phone):
+    # Xóa tất cả các ký tự không phải số
+    phone = re.sub(r'\D', '', phone)
+    # Kiểm tra độ dài số điện thoại
+    if len(phone) == 10 and phone.startswith('0'):
+        return phone
+    elif len(phone) == 11 and phone.startswith('84'):
+        return '0' + phone[2:]
+    else:
+        return None
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user = None
-    
+
+
+
 def main_page():   
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
@@ -61,43 +79,50 @@ def main_page():
         table_names = ["table_customer", "table_product"]
         dfs = {}
         
-        for table_id, table_name in zip(table_ids, table_names):
-            if table_name == "table_customer":
-                #chỉ lấy ra khách hàng nào đã chốt thôi
-                payload = {
-                    "filter": {
-                        "conditions": [
-                            {
-                                "field_name": "Tình trạng",
-                                "operator": "is",
-                                "value": [
-                                    "Chốt"
-                                ]
-                            }
-                        ],
-                        "conjunction": "and"
+        # Tạo một phần tử empty để hiển thị thông báo
+        info_placeholder = st.empty()
+
+        # Hiển thị thông báo
+        info_placeholder.info("Đang kết nối dữ liệu, vui lòng chờ xíu nhen 😉")
+
+        try:
+            for table_id, table_name in zip(table_ids, table_names):
+                if table_name == "table_customer":
+                    payload = {
+                        "filter": {
+                            "conditions": [
+                                {
+                                    "field_name": "Tình trạng",
+                                    "operator": "is",
+                                    "value": [
+                                        "Chốt"
+                                    ]
+                                }
+                            ],
+                            "conjunction": "and"
+                        }
                     }
-                }
+                    data = get_larkbase_table_data(table_id, payload)
+                else:
+                    data = get_larkbase_table_data(table_id)
                 
-                st.info("Đang lấy dữ liệu từ: " + table_name)
-                data = get_larkbase_table_data(table_id, payload)
-                
+                if data is not None:
+                    dfs[table_name] = pd.DataFrame(data)
+                else:
+                    raise Exception(f"Kết nối đến bảng {table_name} thất bại 😥")
+
+            if len(dfs) == len(table_names):
+                # Xóa thông báo "Đang kết nối dữ liệu"
+                info_placeholder.empty()
+                st.success("Kết nối và lấy dữ liệu từ Larkbase thành công 🤗")
             else:
-                st.info("Đang lấy dữ liệu từ: " + table_name)
-                data = get_larkbase_table_data(table_id)
-                
-            if data is not None:
-                dfs[table_name] = pd.DataFrame(data)
-                # save_df_to_json(dfs[table_name], f"{table_name}.json")  # Lưu DataFrame vào file JSON
-            else:
-                st.error(f"Kết nối đến bảng {table_name} thất bại!")
-                st.info(f"Vui lòng F5 lại trang và thử lại!")
-                return
-        if len(dfs) == len(table_names):
-            st.success("Kết nối và lấy dữ liệu từ Larkbase thành công!")
-        else:
-            st.error("Kết nối và lấy dữ liệu từ Larkbase thất bại!")
-            st.info(f"Vui lòng F5 lại trang và thử lại!")
+                raise Exception("Kết nối và lấy dữ liệu từ Larkbase thất bại 😥")
+
+        except Exception as e:
+            # Xóa thông báo "Đang kết nối dữ liệu"
+            info_placeholder.empty()
+            st.error(str(e))
+            st.info("Vui lòng F5 lại trang/xóa cache và thử lại 🤗")
             return
 
 
@@ -105,6 +130,7 @@ def main_page():
         customer_data = dfs["table_customer"].to_dict('records')
         product_data = dfs["table_product"].to_dict('records')
 
+ 
 
         # Tạo danh sách Nguồn khách hàng
         
@@ -135,22 +161,70 @@ def main_page():
                 st.session_state.customer_list.append(customer_id)
         
                 
+            
+        def check_existing_phone(formatted_phone, table_customer_id):
+            payload_phone = {
+                "field_names": ["Số điện thoại"],
+                "filter": {
+                    "conjunction": "and",
+                    "conditions": [
+                        {
+                            "field_name": "Số điện thoại",
+                            "operator": "is",
+                            "value": [str(formatted_phone)]
+                        }
+                    ]
+                }
+            }
+            data_list_phone = get_larkbase_table_data(table_customer_id, payload_phone)
+            df_list_phone = pd.DataFrame(data_list_phone)
+            customer_phone_data = df_list_phone.to_dict('records')
+            
+            existing_phone_numbers = [customer['fields'].get('Số điện thoại', '') for customer in customer_phone_data if customer['fields'].get('Số điện thoại')]
+            
+            return existing_phone_numbers, customer_phone_data
+            
+        
+        
+
         
         # Form nhập thông tin khách hàng
         st.header("Thông tin khách hàng")
+        
 
-        # Tùy chọn thêm mới hoặc chọn khách hàng có sẵn
+        # Tùy chọn thêm mới hoặc chọn khách hàng có5 sẵn
         customer_option = st.radio("Lựa chọn khách hàng", ("Thêm mới", "Chọn từ danh sách"))
-
         if customer_option == "Thêm mới":
             col1, col2, col3 = st.columns(3)
             
             with col1:
                 customer_name = st.text_input("Tên khách hàng", placeholder="Nhập tên khách hàng...")
+                if customer_name:
+                    customer_name = format_name(customer_name)
+                    st.write(f"Tên khách hàng: {customer_name}")
             
             with col2:
-                customer_phone = st.text_input("Số điện thoại", placeholder="Chỉ nhập dạng số ví dụ 0816226086")
-            
+                customer_phone = st.text_input("Số điện thoại", placeholder="Nhập số điện thoại (VD: 0816226086)")
+                if customer_phone:
+                    formatted_phone = format_phone(customer_phone)
+                    if formatted_phone:
+                        st.write(f"Số điện thoại: {formatted_phone}")
+                        info_placeholder = st.empty()
+                        info_placeholder.info("Đang kiểm tra số điện thoại")
+                        st.session_state.existing_phone_numbers, st.session_state.customer_phone_data = check_existing_phone(formatted_phone, table_customer_id)
+                        # Kiểm tra xem số điện thoại đã tồn tại chưa
+                        if formatted_phone in st.session_state.existing_phone_numbers:
+                            info_placeholder.empty()
+                            st.warning(f"Số điện thoại {formatted_phone} đã có trong thông tin khách hàng. Vui lòng kiểm tra lại.")
+                        else:
+                            info_placeholder.empty()
+                            
+                            st.success("Số điện thoại hợp lệ và chưa tồn tại trong hệ thống.")
+                    else:
+                        st.error("Số điện thoại không hợp lệ. Vui lòng nhập lại.")
+                        
+                        
+                        
             with col3:
                 customer_ad_channel = st.selectbox("Nguồn khách hàng", customer_source_list, index=customer_source_list.index("FB Mới"))
             
