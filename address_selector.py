@@ -40,5 +40,13 @@ def address_selector():
         if selected_district:
             wards = [''] + sorted(df[(df['Tỉnh Thành Phố'] == selected_province) & (df['Quận Huyện'] == selected_district)]['Phường Xã'].unique().tolist())
             selected_ward = st.selectbox('Chọn phường/xã', wards, key='ward')
+            # Xử lý trường hợp NaN
+            if pd.isna(selected_ward):
+                selected_ward = ""
 
+    # Convert empty strings and None to empty string
+    selected_province = selected_province if selected_province not in ['', None] else ""
+    selected_district = selected_district if selected_district not in ['', None] else ""
+    selected_ward = selected_ward if selected_ward not in ['', None] else ""
+    
     return selected_province, selected_district, selected_ward

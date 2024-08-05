@@ -425,10 +425,19 @@ def main_page():
         selected_province, selected_district, selected_ward = address_selector()
         
         # Hiển thị địa chỉ đã chọn
-        if selected_province and selected_district and selected_ward:
-            full_address = f"{selected_ward}, {selected_district}, {selected_province}"
+        # Hiển thị địa chỉ đã chọn
+        full_address_parts = [selected_ward, selected_district, selected_province]
+        st.write(selected_ward)
+        print(selected_ward)
+        full_address_parts = [str(part) for part in full_address_parts if part not in [None, '', "nan"]]  # Chuyển đổi thành chuỗi và loại bỏ các giá trị không hợp lệ
+        
+        full_address = ", ".join(full_address_parts) if full_address_parts else ""
+        
+        if full_address:
             st.write(f"Địa chỉ đã chọn: {full_address}")
-            
+        else:
+            st.write("Chưa chọn đầy đủ địa chỉ")
+                
         dia_chi_chi_tiet = st.text_input("Địa chỉ chi tiết", placeholder="Nhập số nhà, tên đường...")
         # dia_chi_don_hang = st.text_input("Địa chỉ đơn hàng") bản cũ 05082024
 
@@ -436,6 +445,11 @@ def main_page():
 
         # Thêm nút "Lưu đơn hàng"
         if st.button("Lưu đơn hàng"):
+            # Tạo một phần tử empty để hiển thị thông báo
+            info_placeholder = st.empty()   
+            # Hiển thị thông báo
+            info_placeholder.info("Đang lưu dữ liệu về larkbase, vui lòng chờ xíu nhen 🏃🏃🏃...")
+            
             # Tạo danh sách sản phẩm trong đơn hàng
             order_items = []
             for index, row in order_items_df.iterrows():
@@ -502,13 +516,15 @@ def main_page():
             
             # Thêm thông tin địa chỉ vào payload
             payload['order'].update({
-                'Tỉnh/Thành phố': selected_province,
-                'Quận/Huyện': selected_district,
-                'Phường/Xã': selected_ward,
-                'Địa chỉ chi tiết': dia_chi_chi_tiet,
-                'Địa chỉ đầy đủ': f"{dia_chi_chi_tiet}, {full_address}" if full_address else dia_chi_chi_tiet
+                'Tỉnh/Thành phố': selected_province or None,
+                'Quận/Huyện': selected_district or None,
+                'Phường/Xã': selected_ward or None,
+                'Địa chỉ chi tiết': dia_chi_chi_tiet or None,
+                'Địa chỉ đầy đủ': f"{dia_chi_chi_tiet}, {full_address}" if full_address and dia_chi_chi_tiet else (dia_chi_chi_tiet or full_address or None)
+
             })
-                
+            
+            st.write(payload)
             # URL của API endpoint
             url = st.secrets["webhook"]["url"]
             
@@ -524,11 +540,13 @@ def main_page():
             response_content = response.text
             
             if status_code == 200:
+                info_placeholder.empty()
                 st.success("Đơn hàng đã được lưu và gửi đến webhook thành công!")
-                st.markdown("Xem chi tiết đơn hàng tại [đây](https://qfnpn9xcbdi.sg.larksuite.com/wiki/DBnFww2deiGz67kRxEglSsjZgxg?table=tblZhHGDDX6sz9k1&view=vew49OBqZK).")
+                st.markdown("Xem chi tiết đơn hàng tại [đây](https://qfnpn9xcbdi.sg.larksuite.com/wiki/DBnFww2deiGz67kRxEglSsjZgxg?table=tblZhHGDDX6sz9k1&view=vew2HUeTTD).")
                 st.info(f"Nội dung phản hồi: {response_content}")
             else:
-                st.error("Có lỗi xảy ra khi lưu và gửi đơn hàng. Vui lòng thử lại.")
+                info_placeholder.empty()
+                st.error("Có lỗi xảy ra khi lưu và gửi đơn hàng. Vui lòng thử lại Gửi email thông qua support@nguyenngothuong.com nếu cần!")
                 st.error(f"Mã lỗi: {status_code}")
                 st.error(f"Nội dung phản hồi: {response_content}")
         st.write("")
