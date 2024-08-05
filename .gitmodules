@@ -1,0 +1,3 @@
+[submodule "streamlit_address_vietnam"]
+	path = streamlit_address_vietnam
+	url = https://github.com/nguyenngothuong/streamlit_address_vietnam.git

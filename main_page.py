@@ -13,6 +13,7 @@ import os
 from auth import login,  logout, check_logged_in 
 from pages import login_page, help_page, note
 import re
+from address_selector import address_selector
 
 def format_name(name):
     # Xóa dấu cách thừa và viết hoa chữ cái đầu của mỗi từ
@@ -417,7 +418,20 @@ def main_page():
             so_luong_m2_yeu_cau_giu = st.text_input("Số m2 yêu cầu giữ & Yêu cầu khác từ khách", placeholder="Nhập dạng số vd: 26")
         
         uploaded_files = st.file_uploader("Upload SƠ ĐỒ NHÀ KHÁCH & hình ảnh mặt bằng (nếu đơn hoàn thiện)", accept_multiple_files=True)
-        dia_chi_don_hang = st.text_input("Địa chỉ đơn hàng")
+        
+        
+        # Thêm phần chọn địa chỉ
+        st.subheader("Địa chỉ đơn hàng")
+        selected_province, selected_district, selected_ward = address_selector()
+        
+        # Hiển thị địa chỉ đã chọn
+        if selected_province and selected_district and selected_ward:
+            full_address = f"{selected_ward}, {selected_district}, {selected_province}"
+            st.write(f"Địa chỉ đã chọn: {full_address}")
+            
+        dia_chi_chi_tiet = st.text_input("Địa chỉ chi tiết", placeholder="Nhập số nhà, tên đường...")
+        # dia_chi_don_hang = st.text_input("Địa chỉ đơn hàng") bản cũ 05082024
+
         ghi_chu_don_hang = st.text_area("Ghi chú", placeholder="Yêu cầu thêm của khách hàng, ghi chú,.... nhập vào đây!")
 
         # Thêm nút "Lưu đơn hàng"
@@ -473,7 +487,7 @@ def main_page():
                     'Phí vận chuyển': st.session_state.phi_van_chuyen,
                     'Phí công thợ': st.session_state.phi_cong_tho,
                     'Hình thức đơn hàng': hinh_thuc_don_hang,
-                    'Địa chỉ': dia_chi_don_hang,
+                    'Địa chỉ': dia_chi_chi_tiet,
                     'so_luong_m2_yeu_cau_giu': so_luong_m2_yeu_cau_giu,
                     'thoi_gian_thuc_hien_don_hang_timestamp': thoi_gian_thuc_hien_don_hang_timestamp,
                     'thoi_gian_thuc_hien_don_hang_date': thoi_gian_dd_mm_yyyy,
@@ -485,8 +499,16 @@ def main_page():
                 'order_items': order_items,
                 'flow_key': str(uuid.uuid4())  # Tạo flow_key duy nhất
             }
-
             
+            # Thêm thông tin địa chỉ vào payload
+            payload['order'].update({
+                'Tỉnh/Thành phố': selected_province,
+                'Quận/Huyện': selected_district,
+                'Phường/Xã': selected_ward,
+                'Địa chỉ chi tiết': dia_chi_chi_tiet,
+                'Địa chỉ đầy đủ': f"{dia_chi_chi_tiet}, {full_address}" if full_address else dia_chi_chi_tiet
+            })
+                
             # URL của API endpoint
             url = st.secrets["webhook"]["url"]
             

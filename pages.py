@@ -17,7 +17,8 @@ def login_page():
 
 def main_page():
     st.title("Trang chính")
-    st.write("Chào mừng đến với ứng dụng Streamlit!")
+    st.write("Chào mừng đến với ứng dụng CRM LỤC THỦY!")
+    st.info("Dev @nguyenngothuong")
     
     st.text_area("Nhập suy nghĩ của bạn!")
     
