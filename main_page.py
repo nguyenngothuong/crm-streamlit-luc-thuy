@@ -1,3 +1,4 @@
+# 1. Imports
 import streamlit as st
 import pandas as pd
 import uuid
@@ -15,6 +16,11 @@ from pages import login_page, help_page, note
 import re
 from address_selector import address_selector
 
+
+# 2. Constants (nếu có)
+# Ví dụ: URL_WEBHOOK = "https://your-webhook-url.com"
+
+# 3. Các hàm tiện ích và hàm phụ trợ
 def format_name(name):
     # Xóa dấu cách thừa và viết hoa chữ cái đầu của mỗi từ
     formatted_name = ' '.join(word.capitalize() for word in name.split())
@@ -30,6 +36,11 @@ def format_phone(phone):
         return '0' + phone[2:]
     else:
         return None
+
+
+
+
+
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -56,18 +67,13 @@ def main_page():
             else:
                 st.error("Sai tài khoản hoặc mật khẩu")
     else:
-        st.write(f"Xin chào {st.session_state.user}!")
-
-
-
         lark_app_id = st.secrets["streamlit"]["lark_app_id"]
         lark_app_secret = st.secrets["streamlit"]["lark_app_secret"]
         lark_app_token = st.secrets["streamlit"]["lark_app_token"]
 
         table_customer_id = st.secrets["streamlit"]["table_customer_id"]
-        table_order_id = st.secrets["streamlit"]["table_order_id"]
-        table_orders_id = st.secrets["streamlit"]["table_orders_id"]
         table_product_id = st.secrets["streamlit"]["table_product_id"]
+        table_sale_id = st.secrets["streamlit"]["table_sale"]
         
         def get_larkbase_table_data(table_id, payload=None):
             return get_larkbase_data_v4(lark_app_token, table_id, payload=payload,  app_id=lark_app_id, app_secret=lark_app_secret)
@@ -76,8 +82,8 @@ def main_page():
             with open(file_name, "w", encoding="utf-8") as file:
                 json.dump(df.to_dict(orient="records"), file, ensure_ascii=False, indent=4)
                 
-        table_ids = [table_customer_id, table_product_id]
-        table_names = ["table_customer", "table_product"]
+        table_ids = [table_customer_id, table_product_id, table_sale_id]
+        table_names = ["table_customer", "table_product","table_sale"]
         dfs = {}
         
         # Tạo một phần tử empty để hiển thị thông báo
@@ -97,6 +103,22 @@ def main_page():
                                     "operator": "is",
                                     "value": [
                                         "Chốt"
+                                    ]
+                                }
+                            ],
+                            "conjunction": "and"
+                        }
+                    }
+                    data = get_larkbase_table_data(table_id, payload)
+                elif table_name == "table_sale":
+                    payload = {
+                        "filter": {
+                            "conditions": [
+                                {
+                                    "field_name": "Trạng thái làm việc",
+                                    "operator": "is",
+                                    "value": [
+                                        "Đang làm việc"
                                     ]
                                 }
                             ],
@@ -130,11 +152,23 @@ def main_page():
         # Đọc dữ liệu khách hàng từ DataFrame
         customer_data = dfs["table_customer"].to_dict('records')
         product_data = dfs["table_product"].to_dict('records')
+        sale_data = dfs["table_sale"].to_dict('records')
+        
+        usernames = [""] + [sale['fields'].get('Tên đăng nhập', [{'text': ''}])[0]['text'] for sale in sale_data]
+        
+        # Trong phần form nhập liệu
+        st.subheader("Thông tin người lập đơn")
+        selected_username = st.selectbox("Chọn tên đăng nhập", usernames, index=0)
+        if selected_username:
+            selected_sale = next((sale for sale in sale_data if sale['fields'].get('Tên đăng nhập', [{'text': ''}])[0]['text'] == selected_username), None)
+            if selected_sale:
+                lark_account = selected_sale['fields'].get('Tài khoản lark', [{}])[0]
+                st.write(f"Xin chào {lark_account.get('name', '')}")
+        else:
+            st.warning("Vui lòng chọn tên đăng nhập")
 
- 
 
         # Tạo danh sách Nguồn khách hàng
-        
         customer_source_list = list(set([customer['fields'].get('Nguồn khách hàng', '') for customer in customer_data if customer['fields'].get('Nguồn khách hàng', '')]))
 
 
@@ -425,130 +459,130 @@ def main_page():
         selected_province, selected_district, selected_ward = address_selector()
         
         # Hiển thị địa chỉ đã chọn
-        # Hiển thị địa chỉ đã chọn
         full_address_parts = [selected_ward, selected_district, selected_province]
-        st.write(selected_ward)
-        print(selected_ward)
         full_address_parts = [str(part) for part in full_address_parts if part not in [None, '', "nan"]]  # Chuyển đổi thành chuỗi và loại bỏ các giá trị không hợp lệ
         
         full_address = ", ".join(full_address_parts) if full_address_parts else ""
-        
-        if full_address:
-            st.write(f"Địa chỉ đã chọn: {full_address}")
-        else:
-            st.write("Chưa chọn đầy đủ địa chỉ")
-                
         dia_chi_chi_tiet = st.text_input("Địa chỉ chi tiết", placeholder="Nhập số nhà, tên đường...")
-        # dia_chi_don_hang = st.text_input("Địa chỉ đơn hàng") bản cũ 05082024
-
+        
+        if dia_chi_chi_tiet:
+            st.write(f"Địa chỉ đầy đủ: {dia_chi_chi_tiet}, {full_address}")
+        else:
+            st.info("Vui lòng nhập chi tiết địa chỉ của khách!")
+            
         ghi_chu_don_hang = st.text_area("Ghi chú", placeholder="Yêu cầu thêm của khách hàng, ghi chú,.... nhập vào đây!")
+
 
         # Thêm nút "Lưu đơn hàng"
         if st.button("Lưu đơn hàng"):
-            # Tạo một phần tử empty để hiển thị thông báo
-            info_placeholder = st.empty()   
-            # Hiển thị thông báo
-            info_placeholder.info("Đang lưu dữ liệu về larkbase, vui lòng chờ xíu nhen 🏃🏃🏃...")
-            
-            # Tạo danh sách sản phẩm trong đơn hàng
-            order_items = []
-            for index, row in order_items_df.iterrows():
-                product_id = row['product_id']
-                quantity = int(row['quantity'])
-                price = float(row['price'])
-                note = unidecode.unidecode(row['note'])
-                
-                order_item = {
-                    "fields": {
-                        'Mã vật tư': product_id,
-                        'Số lượng': quantity,
-                        'Đơn giá': price,
-                        'Ghi chú': note,
-                    }
-                }
-                order_items.append(order_item)
-            
-            # Lấy thông tin khách hàng
-            customer_name = unidecode.unidecode(customer_name)
-            customer_phone = unidecode.unidecode(customer_phone)
-            customer_ad_channel = unidecode.unidecode(customer_ad_channel)
-            
-            # Mã hóa các file về base64 và lưu vào mảng
-            uploaded_files_data = []
-            for uploaded_file in uploaded_files:
-                file_content = uploaded_file.read() #đọc convert qua binary
-                file_size = uploaded_file.size
-                file_base64 = base64.b64encode(file_content).decode('utf-8')
-                uploaded_files_data.append({
-                    'file_name': uploaded_file.name,
-                    'file_size': file_size,
-                    'file_binary_content': file_base64
-                })
-                
-            # Tạo payload để gửi đi
-            payload = {
-                'order': {
-                    'Thêm mới khách hàng?': is_new,
-                    'customer_record_id': customer_record_id,
-                    'customer_notes': customer_notes,
-                    'Tên khách hàng': customer_name,
-                    'Số điện thoại': customer_phone,
-                    'ID khách hàng': str(customer_name) + " - " + str(customer_phone),
-                    'Nguồn khách hàng': customer_ad_channel,
-                    'Ghi chú': unidecode.unidecode(ghi_chu_don_hang),
-                    'Tiền cọc': st.session_state.tien_coc,
-                    'Phụ thu': st.session_state.phu_thu,
-                    'Phí vận chuyển': st.session_state.phi_van_chuyen,
-                    'Phí công thợ': st.session_state.phi_cong_tho,
-                    'Hình thức đơn hàng': hinh_thuc_don_hang,
-                    'Địa chỉ': dia_chi_chi_tiet,
-                    'so_luong_m2_yeu_cau_giu': so_luong_m2_yeu_cau_giu,
-                    'thoi_gian_thuc_hien_don_hang_timestamp': thoi_gian_thuc_hien_don_hang_timestamp,
-                    'thoi_gian_thuc_hien_don_hang_date': thoi_gian_dd_mm_yyyy,
-                    'hinh_thuc_thanh_toan': hinh_thuc_thanh_toan,
-                    'tinh_trang_chot': tinh_trang_chot,
-                    'attachments': uploaded_files_data,
-                    'user_login': st.session_state.user,
-                },
-                'order_items': order_items,
-                'flow_key': str(uuid.uuid4())  # Tạo flow_key duy nhất
-            }
-            
-            # Thêm thông tin địa chỉ vào payload
-            payload['order'].update({
-                'Tỉnh/Thành phố': selected_province or None,
-                'Quận/Huyện': selected_district or None,
-                'Phường/Xã': selected_ward or None,
-                'Địa chỉ chi tiết': dia_chi_chi_tiet or None,
-                'Địa chỉ đầy đủ': f"{dia_chi_chi_tiet}, {full_address}" if full_address and dia_chi_chi_tiet else (dia_chi_chi_tiet or full_address or None)
-
-            })
-            
-            st.write(payload)
-            # URL của API endpoint
-            url = st.secrets["webhook"]["url"]
-            
-            # Gửi yêu cầu POST đến API endpoint với xác thực HTTP Basic Auth (nếu cần)
-            user = st.secrets["webhook"]["user"]
-            password = st.secrets["webhook"]["password"]
-            response = requests.post(url, json=payload, auth=HTTPBasicAuth(user, password))
-            
-            # Lấy mã trạng thái (status code) của phản hồi
-            status_code = response.status_code
-
-            # Lấy nội dung (content) của phản hồi
-            response_content = response.text
-            
-            if status_code == 200:
-                info_placeholder.empty()
-                st.success("Đơn hàng đã được lưu và gửi đến webhook thành công!")
-                st.markdown("Xem chi tiết đơn hàng tại [đây](https://qfnpn9xcbdi.sg.larksuite.com/wiki/DBnFww2deiGz67kRxEglSsjZgxg?table=tblZhHGDDX6sz9k1&view=vew2HUeTTD).")
-                st.info(f"Nội dung phản hồi: {response_content}")
+            # Kiểm tra xem tất cả các trường địa chỉ đã được điền đầy đủ chưa
+            if not (selected_province and selected_district and selected_ward and dia_chi_chi_tiet):
+                st.error("Vui lòng điền đầy đủ thông tin địa chỉ (Tỉnh/Thành phố, Quận/Huyện, Phường/Xã, và Địa chỉ chi tiết) trước khi lưu đơn hàng.")
+            elif not selected_username or selected_username == "":
+                st.error("Vui lòng chọn tên đăng nhập trước khi lưu đơn hàng.")
             else:
-                info_placeholder.empty()
-                st.error("Có lỗi xảy ra khi lưu và gửi đơn hàng. Vui lòng thử lại Gửi email thông qua support@nguyenngothuong.com nếu cần!")
-                st.error(f"Mã lỗi: {status_code}")
-                st.error(f"Nội dung phản hồi: {response_content}")
+                # Tạo một phần tử empty để hiển thị thông báo
+                info_placeholder = st.empty()   
+                # Hiển thị thông báo
+                info_placeholder.info("Đang lưu dữ liệu về larkbase, vui lòng chờ xíu nhen 🏃🏃🏃...")
+                
+                # Tạo danh sách sản phẩm trong đơn hàng
+                order_items = []
+                for index, row in order_items_df.iterrows():
+                    product_id = row['product_id']
+                    quantity = int(row['quantity'])
+                    price = float(row['price'])
+                    note = unidecode.unidecode(row['note'])
+                    
+                    order_item = {
+                        "fields": {
+                            'Mã vật tư': product_id,
+                            'Số lượng': quantity,
+                            'Đơn giá': price,
+                            'Ghi chú': note,
+                        }
+                    }
+                    order_items.append(order_item)
+                
+                # Lấy thông tin khách hàng
+                customer_name = unidecode.unidecode(customer_name)
+                customer_phone = unidecode.unidecode(customer_phone)
+                customer_ad_channel = unidecode.unidecode(customer_ad_channel)
+                
+                # Mã hóa các file về base64 và lưu vào mảng
+                uploaded_files_data = []
+                for uploaded_file in uploaded_files:
+                    file_content = uploaded_file.read() #đọc convert qua binary
+                    file_size = uploaded_file.size
+                    file_base64 = base64.b64encode(file_content).decode('utf-8')
+                    uploaded_files_data.append({
+                        'file_name': uploaded_file.name,
+                        'file_size': file_size,
+                        'file_binary_content': file_base64
+                    })
+                    
+                # Tạo payload để gửi đi
+                payload = {
+                    'order': {
+                        'Thêm mới khách hàng?': is_new,
+                        'customer_record_id': customer_record_id,
+                        'customer_notes': customer_notes,
+                        'Tên khách hàng': customer_name,
+                        'Số điện thoại': customer_phone,
+                        'ID khách hàng': str(customer_name) + " - " + str(customer_phone),
+                        'Nguồn khách hàng': customer_ad_channel,
+                        'Ghi chú': unidecode.unidecode(ghi_chu_don_hang),
+                        'Tiền cọc': st.session_state.tien_coc,
+                        'Phụ thu': st.session_state.phu_thu,
+                        'Phí vận chuyển': st.session_state.phi_van_chuyen,
+                        'Phí công thợ': st.session_state.phi_cong_tho,
+                        'Hình thức đơn hàng': hinh_thuc_don_hang,
+                        'Địa chỉ': dia_chi_chi_tiet,
+                        'so_luong_m2_yeu_cau_giu': so_luong_m2_yeu_cau_giu,
+                        'thoi_gian_thuc_hien_don_hang_timestamp': thoi_gian_thuc_hien_don_hang_timestamp,
+                        'thoi_gian_thuc_hien_don_hang_date': thoi_gian_dd_mm_yyyy,
+                        'hinh_thuc_thanh_toan': hinh_thuc_thanh_toan,
+                        'tinh_trang_chot': tinh_trang_chot,
+                        'attachments': uploaded_files_data,
+                        'user_name': selected_username,
+                        'account_lark': [selected_sale['fields'].get('Tài khoản lark', [{}])[0]] if selected_sale else [],
+                        'Tỉnh/Thành phố': selected_province,
+                        'Quận/Huyện': selected_district,
+                        'Phường/Xã': selected_ward,
+                        'Địa chỉ chi tiết': dia_chi_chi_tiet,
+                        'Địa chỉ đầy đủ': f"{dia_chi_chi_tiet}, {full_address}"
+                    },
+                    'order_items': order_items,
+                    'flow_key': str(uuid.uuid4())  # Tạo flow_key duy nhất
+                }
+                
+                st.write(payload)
+                # URL của API endpoint
+                url = st.secrets["webhook"]["url"]
+                
+                # Gửi yêu cầu POST đến API endpoint với xác thực HTTP Basic Auth (nếu cần)
+                user = st.secrets["webhook"]["user"]
+                password = st.secrets["webhook"]["password"]
+                response = requests.post(url, json=payload, auth=HTTPBasicAuth(user, password))
+                
+                # Lấy mã trạng thái (status code) của phản hồi
+                status_code = response.status_code
+
+                # Lấy nội dung (content) của phản hồi
+                response_content = response.text
+                
+                if status_code == 200:
+                    info_placeholder.empty()
+                    st.success("Đơn hàng đã được lưu và gửi đến webhook thành công!")
+                    st.markdown("Xem chi tiết đơn hàng tại [đây](https://qfnpn9xcbdi.sg.larksuite.com/wiki/DBnFww2deiGz67kRxEglSsjZgxg?table=tblZhHGDDX6sz9k1&view=vew2HUeTTD).")
+                    st.info(f"Nội dung phản hồi: {response_content}")
+                else:
+                    info_placeholder.empty()
+                    st.error("Có lỗi xảy ra khi lưu và gửi đơn hàng. Vui lòng thử lại Gửi email thông qua support@nguyenngothuong.com nếu cần!")
+                    st.error(f"Mã lỗi: {status_code}")
+                    st.error(f"Nội dung phản hồi: {response_content}")
+                
+                
         st.write("")
         with st.popover("Đăng xuất"):
             if st.button("Xác nhận", key="xác nhận logout"):
